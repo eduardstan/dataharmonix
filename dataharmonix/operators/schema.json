@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Operator Schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique name of the operator."
+    },
+    "description": {
+      "type": "string",
+      "description": "A brief description of what the operator does."
+    },
+    "operator_type": {
+      "type": "string",
+      "enum": ["class", "function"],
+      "description": "Type of the operator, either a class or a function."
+    },
+    "callable": {
+      "type": "string",
+      "description": "The name of the function or class that this operator will execute or instantiate."
+    },
+    "methods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of methods to call on the class, applicable only if operator_type is 'class'."
+    },
+    "input_type": {
+      "type": "string",
+      "description": "The type of data this operator accepts."
+    },
+    "output_type": {
+      "type": "string",
+      "description": "The type of data this operator outputs."
+    },
+    "parameters": {
+      "type": "array",
+      "minItems": 0,
+      "description": "List of parameters for the operator. Can be empty.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the parameter."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["boolean", "integer", "float", "string", "list of string"],
+            "description": "Data type of the parameter."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the parameter."
+          },
+          "default": {
+            "description": "Default value of the parameter."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this parameter is required."
+          },
+          "possible_values": {
+            "type": "array",
+            "description": "List of possible values for the parameter. Only applicable if type is 'list of string'.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["name", "type", "description"],
+        "dependencies": {
+          "type": {
+            "oneOf": [
+              {
+                "properties": {
+                  "type": {"enum": ["boolean", "integer", "float", "string"]}
+                },
+                "required": ["default"]
+              },
+              {
+                "properties": {
+                  "type": {"enum": ["list of string"]},
+                  "possible_values": {"minItems": 1}
+                },
+                "required": ["possible_values", "default"]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 0,
+      "description": "List of external Python packages required by this operator.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "package_name": {
+            "type": "string",
+            "description": "Name of the external package."
+          },
+          "doc_link": {
+            "type": "string",
+            "format": "uri",
+            "description": "Link to the package's documentation."
+          },
+          "paper_ref": {
+            "type": "string",
+            "description": "Reference to any research paper associated with the package."
+          }
+        },
+        "required": ["package_name"]
+      }
+    }
+  },
+  "required": ["name", "operator_type", "callable", "input_type", "output_type", "parameters"]
+}
