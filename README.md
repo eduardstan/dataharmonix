@@ -12,3 +12,12 @@
 - **Statistical Analysis Integration**: Incorporate statistical operators for insightful exploratory data analysis.
 - **User-Friendly User Interface**: Interact with the pipeline through an intuitive graphical interface.
 - **Expert and Non-Expert Modes**: Cater to different user expertise levels, offering simplicity for non-experts and flexibility for experts.
+
+## Installation
+
+To install DataHarmonix, clone this repository and install the required dependencies:
+```python
+git clone https://github.com/eduardstan/dataharmonix.git
+cd dataharmonix
+pip install -r requirements.txt
+```
