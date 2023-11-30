@@ -21,3 +21,30 @@ git clone https://github.com/eduardstan/dataharmonix.git
 cd dataharmonix
 pip install -r requirements.txt
 ```
+
+## Usage
+
+### Starting the Application
+
+Run the following command from the root directory of the project:
+```python
+python -m dataharmonix
+```
+
+### Creating and Managing Pipelines
+
+1. **Create a Pipeline**: Start by loading your data and then add data processing or statistical operators as needed.
+2. **Customize Your Pipeline**: Add custom operators by defining them in your scripts and registering them with the system.
+3. **Run and Analyze**: Execute the entire pipeline or selected paths and view the results through integrated visualizations.
+
+## Contributing
+
+Contributions to DataHarmonix are welcome! Please read our Contributing Guidelines for more information on how to report bugs, suggest enhancements, and submit pull requests.
+
+## License
+
+DataHarmonix is licensed under the MIT License.
+
+## Acknowledgements
+
+Special thanks to all contributors and users of the DataHarmonix project. Your support and feedback are greatly appreciated!
