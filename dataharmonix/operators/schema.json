@@ -27,6 +27,10 @@
       },
       "description": "List of methods to call on the class, applicable only if operator_type is 'class'."
     },
+    "is_statistical": {
+      "type": "boolean",
+      "description": "Whether the operator is statistical or not."
+    },
     "input_type": {
       "type": "string",
       "description": "The type of data this operator accepts."
@@ -117,5 +121,5 @@
       }
     }
   },
-  "required": ["name", "operator_type", "callable", "input_type", "output_type", "parameters"]
+  "required": ["name", "operator_type", "callable", "is_statistical", "input_type", "output_type", "parameters"]
 }
