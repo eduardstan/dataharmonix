@@ -3,9 +3,10 @@ from ..operators.operator import Operator
 import uuid
 
 class PipelineNode:
-    def __init__(self, operator_config, children=None):
+    def __init__(self, operator_config_json, params=None, children=None):
         self.id = str(uuid.uuid4())  # Unique identifier
-        self.operator_config = json.loads(operator_config)
+        self.operator_config = json.loads(operator_config_json)
+        self.params = params or {}
         self.children = children or []
         self.is_statistical = self.operator_config.get('is_statistical', False)
 
@@ -16,15 +17,22 @@ class PipelineNode:
         self.children = [child for child in self.children if child.id != child_node.id]
 
     def execute(self, input_data):
+        print(f"Executing node: {self.operator_config['name']} with input: {input_data}")
         operator = Operator(config_json=json.dumps(self.operator_config))
-        output_data = operator.execute(input_data) if not self.is_statistical else None
+        output_data = operator.execute(input_data, self.params) if not self.is_statistical else None
+        print(f"Output of node: {output_data}")
 
-        child_results = {}
-        for child in self.children:
-            child_output = child.execute(output_data if not self.is_statistical else input_data)
-            child_results[child.id] = child_output
+        # child_results = {}
+        # for child in self.children:
+        #     child_output = child.execute(output_data if not self.is_statistical else input_data)
+        #     child_results[child.id] = child_output
 
-        return output_data if not self.is_statistical else child_results
+        # return output_data if not self.is_statistical else child_results
+        
+        if self.children:
+            for child in self.children:
+                output_data = child.execute(output_data)
+        return output_data
 
     
 class DataPipeline:

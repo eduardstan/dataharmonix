@@ -1,5 +1,6 @@
 import unittest
 from dataharmonix.operators import Operator
+import json
 
 class TestOperator(unittest.TestCase):
 
@@ -29,13 +30,13 @@ class TestOperator(unittest.TestCase):
     #     self.assertIsNotNone(operator.config, "Config should not be None")
 
     def test_validate_config(self):
-        valid_config = '''
-        {
+        valid_config = {
           "name": "PAAOperator",
           "description": "Applies Piecewise Aggregate Approximation",
           "operator_type": "class",
           "callable": "sktime.transformers.series_as_features.PiecewiseAggregateApproximation",
           "methods": ["fit", "transform"],
+          "is_statistical": False,
           "input_type": "Timeseries",
           "output_type": "Timeseries",
           "parameters": [
@@ -44,7 +45,7 @@ class TestOperator(unittest.TestCase):
               "type": "integer",
               "description": "Number of intervals of the transformation",
               "default": 8,
-              "required": true
+              "required": True
             }
           ],
           "dependencies": [
@@ -54,14 +55,13 @@ class TestOperator(unittest.TestCase):
             }
           ]
         }
-        '''
         
-        invalid_config = '''
-        {
+        invalid_config = {
           "name": "InvalidOperator",
           "description": "This is an invalid operator configuration",
           "operator_type": "function",
           "callable": "math_operations.subtract",
+          "is_statistical": False,
           "input_type": "number",
           "output_type": "number",
           "parameters": [
@@ -69,39 +69,39 @@ class TestOperator(unittest.TestCase):
               "name": "subtrahend",
               "type": "integer",
               "description": "The number to subtract",
-              "default": "five",  // Incorrect data type (string instead of integer)
-              "required": true
+              "default": "five",  # Incorrect data type (string instead of integer)
+              "required": True
             }
           ],
           "dependencies": []
         }
-        '''
-        _ = Operator(config_json=valid_config)
-        self.assertRaises(ValueError, Operator, invalid_config)
+        
+        _ = Operator(config_json=json.dumps(valid_config))
+        self.assertRaises(ValueError, Operator, json.dumps(invalid_config)) # Not working
 
     def test_execute_function(self):
         
-        function_config = '''
-        {
-          "name": "ArithmeticAddOperation",
-          "description": "Adds a costant to data",
-          "operator_type": "function",
-          "callable": "dataharmonix.utils.arithmetic_operations.simple_add_function",
-          "input_type": "number",
-          "output_type": "number",
-          "parameters": [
-            {
-              "name": "constant",
-              "type": "float",
-              "description": "Constant to add",
-              "default": 1.0,
-              "required": false
-            }
-          ],
-          "dependencies": []
+        function_config = {
+            "name": "ArithmeticAddOperation",
+            "description": "Adds a constant to data",
+            "operator_type": "function",
+            "callable": "dataharmonix.utils.arithmetic_operations.simple_add_function",
+            "is_statistical": False,
+            "input_type": "number",
+            "output_type": "number",
+            "parameters": [
+                {
+                    "name": "constant",
+                    "type": "float",
+                    "description": "Constant to add",
+                    "default": 1.0,
+                    "required": False
+                }
+            ],
+            "dependencies": []
         }
-        '''
-        operator = Operator(config_json=function_config)
+        
+        operator = Operator(config_json=json.dumps(function_config))
         data = [1,2,3,4]
         result = operator.execute(data, {"constant": 1.0})
         self.assertEqual(result, [2,3,4,5])
