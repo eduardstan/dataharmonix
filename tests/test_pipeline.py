@@ -22,6 +22,26 @@ function_config = {
     ],
     "dependencies": []
 }
+
+statistical_function_config = {
+    "name": "ArithmeticAddOperation",
+    "description": "Adds a constant to data",
+    "operator_type": "function",
+    "callable": "dataharmonix.utils.arithmetic_operations.simple_add_function",
+    "is_statistical": True,
+    "input_type": "number",
+    "output_type": "number",
+    "parameters": [
+        {
+            "name": "constant",
+            "type": "float",
+            "description": "Constant to add",
+            "default": 1.0,
+            "required": False
+        }
+    ],
+    "dependencies": []
+}
         
 class TestPipelineNode(unittest.TestCase):
 
@@ -55,23 +75,23 @@ class TestDataPipeline(unittest.TestCase):
 
     def test_pipeline_execution(self):
         
-        root_params = {"constant": 6.0}
-        child_params = {"constant": -1.0}
-        # child2_params = {"constant": -2.0}
+        root_params = {"constant": 10.0}
+        child_params = {"constant": -20.0}
+        statistical_params = {"constant": 1000.0}
         
         root_node = PipelineNode(json.dumps(function_config), root_params)
         child_node = PipelineNode(json.dumps(function_config), child_params)
-        # child2_node = PipelineNode(json.dumps(function_config), child2_params)
+        statistical_node = PipelineNode(json.dumps(statistical_function_config), statistical_params)
 
-        root_node.add_child(child_node)
-        # root_node.add_child(child2_node)
+        root_node.add_child(statistical_node)
+        statistical_node.add_child(child_node)
         pipeline = DataPipeline(root_node)
 
         # Assuming you have a way to mock or provide input data
-        input_data = [1,2,3,4]
+        input_data = [0,1,2,3]
         results = pipeline.run(input_data)
 
-        expected_output = [6.0, 7.0, 8.0, 9.0]
+        expected_output = [-10.0, -9, -8.0, -7.0]
         self.assertEqual(results, expected_output)
 
 

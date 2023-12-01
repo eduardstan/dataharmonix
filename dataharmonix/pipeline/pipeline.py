@@ -3,36 +3,49 @@ from ..operators.operator import Operator
 import uuid
 
 class PipelineNode:
-    def __init__(self, operator_config_json, params=None, children=None):
+    def __init__(self, operator_config_json, params=None, children=None, statistical_children=None):
         self.id = str(uuid.uuid4())  # Unique identifier
         self.operator_config = json.loads(operator_config_json)
         self.params = params or {}
-        self.children = children or []
+        self.children = children or []  # Main pipeline nodes
+        self.statistical_children = statistical_children or []  # Statistical analysis nodes
         self.is_statistical = self.operator_config.get('is_statistical', False)
 
     def add_child(self, child_node):
-        self.children.append(child_node)
-
+        if child_node.is_statistical:
+            self.statistical_children.append(child_node)
+        else:
+            self.children.append(child_node)
+            
     def remove_child(self, child_node):
         self.children = [child for child in self.children if child.id != child_node.id]
 
     def execute(self, input_data):
-        print(f"Executing node: {self.operator_config['name']} with input: {input_data}")
+        print(f"\nEntering node: {self.operator_config['name']} (ID: {self.id})")
+        print(f"Input data: {input_data}")
+
         operator = Operator(config_json=json.dumps(self.operator_config))
-        output_data = operator.execute(input_data, self.params) if not self.is_statistical else None
-        print(f"Output of node: {output_data}")
+        node_output = operator.execute(input_data, self.params)
+        print(f"Output after main operator in {self.operator_config['name']}: {node_output}")
 
-        # child_results = {}
-        # for child in self.children:
-        #     child_output = child.execute(output_data if not self.is_statistical else input_data)
-        #     child_results[child.id] = child_output
+        # Execute statistical children without altering the node_output
+        for stat_child in self.statistical_children:
+            print(f"\nExecuting statistical child: {stat_child.operator_config['name']} (ID: {stat_child.id})")
+            stat_child.execute(node_output)  # Execute but do not use its output for main flow
 
-        # return output_data if not self.is_statistical else child_results
+        # Store the output to pass to the main children
+        final_output = node_output if not self.is_statistical else input_data
         
+        # If there are main children, process them and return their output
         if self.children:
             for child in self.children:
-                output_data = child.execute(output_data)
-        return output_data
+                print(f"\nPassing data to main child node: {child.operator_config['name']} (ID: {child.id})")
+                final_output = child.execute(final_output)  # Update node_output with main child node's output
+                print(f"Output after processing main child node: {final_output}")
+        
+        print(f"\nNode {self.operator_config['name']} (ID: {self.id}) returning: {final_output}")
+        return final_output
+
 
     
 class DataPipeline:
