@@ -11,26 +11,36 @@ class PipelineNode:
         self.statistical_children = statistical_children or []  # Statistical analysis nodes
         self.is_statistical = self.operator_config.get('is_statistical', False)
 
-    def add_child(self, child_node):
-        if child_node.is_statistical:
-            self.statistical_children.append(child_node)
+    # Add a node
+    # TODO: check if the input node already exists in the pipeline
+    def add_node(self, node):
+        if node.is_statistical:
+            self.statistical_children.append(node)
         else:
-            self.children.append(child_node)
-            
-    def remove_child(self, child_node):
-        self.children = [child for child in self.children if child.id != child_node.id]
+            self.children.append(node)
+           
+    # Remove a node
+    def remove_node(self, node_id):
+        # Remove a specific child node based on its 'is_statistical' property
+        if any(child.id == node_id and child.is_statistical for child in self.statistical_children):
+            # Remove a specific statistical child
+            self.statistical_children = [
+                child for child in self.statistical_children if child.id != node_id
+            ]
+        elif any(child.id == node_id for child in self.children):
+            # Remove a normal child and its statistical children
+            self.children = [child for child in self.children if child.id != node_id]
+            # Additionally, clear all statistical children of the removed normal child
+            for child in self.children:
+                if child.id == node_id:
+                    child.statistical_children = []
 
     def execute(self, input_data):
-        print(f"\nEntering node: {self.operator_config['name']} (ID: {self.id})")
-        print(f"Input data: {input_data}")
-
         operator = Operator(config_json=json.dumps(self.operator_config))
         node_output = operator.execute(input_data, self.params)
-        print(f"Output after main operator in {self.operator_config['name']}: {node_output}")
 
         # Execute statistical children without altering the node_output
         for stat_child in self.statistical_children:
-            print(f"\nExecuting statistical child: {stat_child.operator_config['name']} (ID: {stat_child.id})")
             stat_child.execute(node_output)  # Execute but do not use its output for main flow
 
         # Store the output to pass to the main children
@@ -39,11 +49,8 @@ class PipelineNode:
         # If there are main children, process them and return their output
         if self.children:
             for child in self.children:
-                print(f"\nPassing data to main child node: {child.operator_config['name']} (ID: {child.id})")
                 final_output = child.execute(final_output)  # Update node_output with main child node's output
-                print(f"Output after processing main child node: {final_output}")
         
-        print(f"\nNode {self.operator_config['name']} (ID: {self.id}) returning: {final_output}")
         return final_output
 
 
@@ -55,9 +62,59 @@ class DataPipeline:
     def set_root(self, root_node):
         self.root_node = root_node
 
-    def remove_node(self, node):
-        # Implement logic to remove a node and its subtree
-        pass
+    def add_node(self, parent_node_id, new_node):
+        assert self.root_node is not None, "The pipeline is empty."
+        assert new_node is not None, "The new node to add cannot be None."
+
+        # Helper function to recursively find and add node
+        def recursive_add(current_node, target_id, node_to_add):
+            if current_node.id == target_id:
+                # If the new node is statistical, ensure the parent is not statistical
+                assert not (node_to_add.is_statistical and current_node.is_statistical), \
+                    "Statistical nodes cannot be children of other statistical nodes."
+                # Check if node already exists
+                for child in current_node.children:
+                    assert child.id != node_to_add.id, "Node with this ID already exists."
+
+                # Add the new node
+                current_node.add_node(node_to_add)
+                return True
+            for child in current_node.children:
+                if recursive_add(child, target_id, node_to_add):
+                    return True
+            return False
+
+        # Start recursive addition process
+        added = recursive_add(self.root_node, parent_node_id, new_node)
+        assert added, f"Parent node with ID {parent_node_id} not found in the pipeline."
+    
+    def remove_node(self, node_id):
+        assert self.root_node is not None, "The pipeline is empty."
+
+        # Helper function to recursively remove node and its statistical children
+        def recursive_remove(current_node, target_id):
+            for child in current_node.children:
+                if child.id == target_id:
+                    # Assert that the node has statistical children if it's not a statistical node itself
+                    assert not child.is_statistical, "Attempting to remove a statistical node as a normal node."
+                    # Remove all statistical children of the target node
+                    child.statistical_children.clear()
+                    # Remove the target node from children
+                    current_node.children.remove(child)
+                    return True
+                # Recur for child nodes
+                if recursive_remove(child, target_id):
+                    return True
+            return False
+
+        if self.root_node.id == node_id:
+            # If the root itself is to be removed, reset the root
+            self.root_node = None
+        else:
+            # Start recursive removal process
+            removed = recursive_remove(self.root_node, node_id)
+            assert removed, f"Node with ID {node_id} not found in the pipeline."
+
 
     def run(self, input_data):
         if not self.root_node:
