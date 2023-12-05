@@ -90,7 +90,7 @@ class TestDataPipeline(unittest.TestCase):
         root_node.add_node(child_node)
         pipeline = DataPipeline(root_node)
 
-        # Assuming you have a way to mock or provide input data
+        # Perhaps mocking would be ideal here
         input_data = [0,1,2,3]
         results = pipeline.run(input_data)
 
