@@ -1,3 +1,4 @@
+import ipycytoscape
 import json
 from ..operators.operator import Operator
 import uuid
@@ -120,3 +121,54 @@ class DataPipeline:
         if not self.root_node:
             raise ValueError("Pipeline has no root node.")
         return self.root_node.execute(input_data)
+    
+    def get_current_state(self):
+        # Return a representation of the current pipeline state
+        # This should include nodes and their connections
+        return {
+            'nodes': self.get_nodes(),
+            'edges': self.get_edges()
+        }
+
+    def collect_nodes_and_edges(self, current_node, nodes, edges, processed_nodes=None):
+        if processed_nodes is None:
+            processed_nodes = set()
+
+        if current_node.id in processed_nodes:
+            return  # Skip processing if this node has already been processed
+
+        processed_nodes.add(current_node.id)
+
+        # Create a node for ipycytoscape
+        node_data = {
+            'id': current_node.id,
+            'label': current_node.operator_config.get('name', 'Unknown')
+        }
+        node_classes = 'statistical' if current_node.is_statistical else 'normal'
+        nodes.append(ipycytoscape.Node(data=node_data, classes=node_classes))
+
+        # Recursively traverse child nodes
+        for child in current_node.children:
+            edge_data = {'source': current_node.id, 'target': child.id}
+            edges.append(ipycytoscape.Edge(data=edge_data, classes='operator-edge'))
+            self.collect_nodes_and_edges(child, nodes, edges, processed_nodes)
+
+        # Recursively traverse statistical child nodes
+        for stat_child in current_node.statistical_children:
+            edge_data = {'source': current_node.id, 'target': stat_child.id}
+            edges.append(ipycytoscape.Edge(data=edge_data, classes='statistical-edge'))
+            self.collect_nodes_and_edges(stat_child, nodes, edges, processed_nodes)
+
+
+
+    def get_nodes(self):
+        nodes = []
+        if self.root_node:
+            self.collect_nodes_and_edges(self.root_node, nodes, [])
+        return nodes
+
+    def get_edges(self):
+        edges = []
+        if self.root_node:
+            self.collect_nodes_and_edges(self.root_node, [], edges)
+        return edges

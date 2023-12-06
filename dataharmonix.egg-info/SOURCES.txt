@@ -21,6 +21,7 @@ dataharmonix/ui/ipywidgets_ui/node_view.py
 dataharmonix/ui/ipywidgets_ui/utils.py
 dataharmonix/utils/__init__.py
 dataharmonix/utils/arithmetic_operations.py
+dataharmonix/utils/dummy_operators.py
 dataharmonix/utils/operator_registry.py
 dataharmonix/utils/register.py
 tests/__init__.py

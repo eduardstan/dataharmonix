@@ -1,39 +1,65 @@
-import ipywidgets as widgets
-from IPython.display import display, clear_output
-from .node_view import NodeView
+import ipycytoscape
+from dataharmonix.utils.graph_utils import create_cytoscape_node, create_cytoscape_edge
 
 class MainView:
-    def __init__(self):
-        self.pipeline_view = widgets.Output()
-        self.controls_view = self.create_controls_view()
+    def __init__(self, data_pipeline):
+        self.data_pipeline = data_pipeline
+        self.graph_widget = ipycytoscape.CytoscapeWidget()
+        self.update_graph_view()
 
-    def create_controls_view(self):
-        # Buttons and other controls will be added here
-        add_node_button = widgets.Button(description="Add Node")
-        remove_node_button = widgets.Button(description="Remove Node")
-        run_pipeline_button = widgets.Button(description="Run Pipeline")
+    def update_graph_view(self):
+        pipeline_state = self.data_pipeline.get_current_state()
+        self.graph_widget.graph.clear()
+        for node in pipeline_state['nodes']:
+            print(node.classes, node.data)
+        self.graph_widget.graph.add_nodes(pipeline_state['nodes'])
+        self.graph_widget.graph.add_edges(pipeline_state['edges'])
+        self.apply_graph_styles()
 
-        # Event handlers for buttons can be added here
 
-        return widgets.VBox([add_node_button, remove_node_button, run_pipeline_button])
+    def get_graph_elements(self):
+        nodes = [create_cytoscape_node(node) for node in self.data_pipeline.get_nodes()]
+        edges = [create_cytoscape_edge(edge) for edge in self.data_pipeline.get_edges()]
+        return nodes, edges
+
+    def apply_graph_styles(self):
+        self.graph_widget.set_style([
+            # Style for normal nodes
+            {
+                'selector': 'node.normal',
+                'style': {
+                    'background-color': 'blue',
+                    'shape': 'triangle'  # Change this to the desired shape
+                }
+            },
+            # Style for statistical nodes
+            {
+                'selector': 'node.statistical',
+                'style': {
+                    'background-color': 'green',
+                    'shape': 'rectangle'  # Change this to the desired shape
+                }
+            },
+            # Style for operator->operator edge
+            {
+                'selector': 'edge.operator-edge', 
+                'style': {
+                    'line-color': 'black', 
+                    'curve-style': 
+                        'bezier', 
+                        'target-arrow-shape': 'triangle'
+                }
+            },
+            # Style for operator->statistical edge
+            {
+                'selector': 'edge.statistical-edge', 
+                'style': {
+                    'line-color': 'red', 
+                    'curve-style': 'unbundled-bezier', 
+                    'target-arrow-shape': 'none'
+                }
+            }
+        ])
 
     def render(self):
-        return widgets.VBox([self.pipeline_view, self.controls_view])
-
-    def add_node_to_view(self, node):
-        node_view = NodeView(node)
-        self.pipeline_view.clear_output()
-        with self.pipeline_view:
-            display(node_view.render())
-
-    # Add methods for handling button clicks and interactions
-
-    # Example:
-    def on_add_node_button_clicked(self, b):
-        # Logic to add a new node
-        # For demonstration, let's add a mock node
-        mock_node = {
-            "name": "Example Operator",
-            "parameters": [{"name": "param1", "type": "float", "default": 1.2}]
-        }
-        self.add_node_to_view(mock_node, is_statistical=False)
+        return self.graph_widget

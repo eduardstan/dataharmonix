@@ -6,6 +6,7 @@ Home-page: https://github.com/eduardstan/dataharmonix
 Author: Eduard I. Stan
 Author-email: stan.i.eduard@gmail.com
 License-File: LICENSE
+Requires-Dist: numpy
 Requires-Dist: jsonschema
 Requires-Dist: ipywidgets
 Requires-Dist: ipycytoscape

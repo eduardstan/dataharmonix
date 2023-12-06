@@ -13,6 +13,7 @@ setup(
         'dataharmonix': ['operators/schema.json'],
     },
     install_requires=[
+        'numpy',
         'jsonschema',
         'ipywidgets',
         'ipycytoscape',
