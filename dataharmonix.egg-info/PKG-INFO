@@ -1,11 +1,11 @@
 Metadata-Version: 2.1
 Name: dataharmonix
 Version: 0.1.0
-Summary: UNKNOWN
-Home-page: UNKNOWN
-License: UNKNOWN
-Platform: UNKNOWN
+Summary: A blend of 'data' and 'harmonics', symbolizing the harmonious integration of diverse data types and processing methods.
+Home-page: https://github.com/eduardstan/dataharmonix
+Author: Eduard I. Stan
+Author-email: stan.i.eduard@gmail.com
 License-File: LICENSE
-
-UNKNOWN
-
+Requires-Dist: jsonschema
+Requires-Dist: ipywidgets
+Requires-Dist: ipycytoscape

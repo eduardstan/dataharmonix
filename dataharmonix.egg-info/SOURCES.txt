@@ -6,6 +6,7 @@ dataharmonix/__init__.py
 dataharmonix.egg-info/PKG-INFO
 dataharmonix.egg-info/SOURCES.txt
 dataharmonix.egg-info/dependency_links.txt
+dataharmonix.egg-info/requires.txt
 dataharmonix.egg-info/top_level.txt
 dataharmonix/operators/__init__.py
 dataharmonix/operators/operator.py
@@ -13,7 +14,16 @@ dataharmonix/operators/operator_factory.py
 dataharmonix/operators/schema.json
 dataharmonix/pipeline/__init__.py
 dataharmonix/pipeline/pipeline.py
+dataharmonix/ui/__init__.py
+dataharmonix/ui/ipywidgets_ui/__init__.py
+dataharmonix/ui/ipywidgets_ui/main_view.py
+dataharmonix/ui/ipywidgets_ui/node_view.py
+dataharmonix/ui/ipywidgets_ui/utils.py
 dataharmonix/utils/__init__.py
+dataharmonix/utils/arithmetic_operations.py
 dataharmonix/utils/operator_registry.py
+dataharmonix/utils/register.py
 tests/__init__.py
 tests/test_operators.py
+tests/test_pipeline.py
+tests/test_registry.py
