@@ -10,17 +10,22 @@ class MainView:
         self.data_pipeline = data_pipeline
         self.operators = operators
         
-        # Add node
         # Filter out statistical operators
         normal_operators = {name: op for name, op in operators.items() if not op['is_statistical']}
         self.operator_dropdown = widgets.Dropdown(options=[op['name'] for op in normal_operators.values()], description='Operator:')
         
-        # Dropdown to select parent node for the new node
-        self.parent_node_dropdown = widgets.Dropdown(options=[('Root', None)] + [(node.id, node) for node in data_pipeline.get_nodes()], description='Parent Node:')
+        # Filter out non-statistical operators
+        statistical_operators = {name: op for name, op in operators.items() if op['is_statistical']}
+        self.stat_operator_dropdown = widgets.Dropdown(options=[op['name'] for op in statistical_operators.values()], description='Statistical Operator:')
+        
+        # Dropdowns for normal and statistical nodes
+        self.parent_node_dropdown_normal = widgets.Dropdown(options=self.get_normal_node_options(), description='Parent Node (Normal):')
+        self.parent_node_dropdown_statistical = widgets.Dropdown(options=self.get_normal_node_options(), description='Parent Node (Statistical):')
         
         self.operator_dropdown.observe(self.on_operator_change, names='value')
         self.parameter_widgets = widgets.VBox([])
         
+                
         # Initialize parameter widgets for the default (first) operator
         if self.operators:
             first_operator = next(iter(self.operators.values()))
@@ -29,7 +34,11 @@ class MainView:
         self.add_node_button = widgets.Button(description='Add Node')
         self.add_node_button.on_click(self.add_node)
         
-        self.node_form = widgets.VBox([self.operator_dropdown, self.parent_node_dropdown, self.parameter_widgets, self.add_node_button])
+        self.add_stat_node_button = widgets.Button(description='Add Statistical Node')
+        self.add_stat_node_button.on_click(self.add_statistical_node)
+        
+        self.node_form = widgets.VBox([self.operator_dropdown, self.parent_node_dropdown_normal, self.parameter_widgets, self.add_node_button])
+        self.stat_node_form = widgets.VBox([self.stat_operator_dropdown, self.parent_node_dropdown_statistical, self.add_stat_node_button])
         
         self.graph_widget = ipycytoscape.CytoscapeWidget()
         self.update_graph_view()
@@ -59,7 +68,7 @@ class MainView:
         parameters = {widget.description: widget.value for widget in self.parameter_widgets.children}
         new_node = PipelineNode(selected_operator_json, params=parameters)
 
-        parent_node_id = self.parent_node_dropdown.value
+        parent_node_id = self.parent_node_dropdown_normal.value
         if parent_node_id is None or parent_node_id == 'Root':
             self.data_pipeline.set_root(new_node)
         else:
@@ -69,9 +78,21 @@ class MainView:
             self.data_pipeline.add_node(parent_node.id, new_node)
         
         self.update_graph_view()
-        # Update parent node dropdown with the new node
-        pipeline_nodes = self.data_pipeline.get_nodes_with_id()
-        self.parent_node_dropdown.options = [('Root', None)] + [(node.id, node.id) for node in pipeline_nodes]
+        self.update_dropdowns()
+        
+    def add_statistical_node(self, b):
+        selected_stat_operator_json = json.dumps(self.operators[self.stat_operator_dropdown.value])
+        new_stat_node = PipelineNode(selected_stat_operator_json)
+
+        parent_node_id = self.parent_node_dropdown_statistical.value
+        if parent_node_id and parent_node_id != 'Root':
+            parent_node = self.find_node_by_id(parent_node_id)
+            assert parent_node is not None, "Parent node not found."
+            parent_node.add_node(new_stat_node)
+            print(f"Added statistical node to parent: {parent_node_id}")  # Debugging
+        
+        self.update_graph_view()
+        self.update_dropdowns()
 
     def update_graph_view(self):
         pipeline_state = self.data_pipeline.get_current_state()
@@ -79,6 +100,14 @@ class MainView:
         self.graph_widget.graph.add_nodes(pipeline_state['nodes'])
         self.graph_widget.graph.add_edges(pipeline_state['edges'])
         self.apply_graph_styles()
+        
+    def update_dropdowns(self):
+        normal_node_options = self.get_normal_node_options()
+        self.parent_node_dropdown_normal.options = normal_node_options
+        self.parent_node_dropdown_statistical.options = normal_node_options
+
+    def get_normal_node_options(self):
+        return [('Root', None)] + [(node.id, node.id) for node in self.data_pipeline.get_nodes_with_id() if not node.is_statistical]
 
     def on_node_click(self, event):
         # Extract node ID from the event
@@ -91,7 +120,7 @@ class MainView:
             # Update the output widget with the node's parameters
             with self.output_widget:
                 self.output_widget.clear_output()
-                display(f"Parameters for node {node_id}: {params}")
+                display(f"Parameters for node {node.operator_config['name']} ({node_id}): {params}")
 
     def find_node_by_id(self, node_id, current_node=None):
         if current_node is None:
@@ -117,7 +146,7 @@ class MainView:
                 'selector': 'node.normal',
                 'style': {
                     'background-color': 'blue',
-                    'shape': 'triangle'  # Change this to the desired shape
+                    'shape': 'ellipse'  # Change this to the desired shape
                 }
             },
             # Style for statistical nodes
@@ -151,5 +180,5 @@ class MainView:
 
     def render(self):
         # Layout the graph and UI components
-        ui_components = widgets.VBox([self.node_form])
+        ui_components = widgets.VBox([self.node_form, self.stat_node_form])
         return widgets.VBox([self.graph_widget, ui_components, self.output_widget])
