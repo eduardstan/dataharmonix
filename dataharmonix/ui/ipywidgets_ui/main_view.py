@@ -22,9 +22,11 @@ class MainView:
         self.parent_node_dropdown_normal = widgets.Dropdown(options=self.get_normal_node_options(), description='Parent Node (Normal):')
         self.parent_node_dropdown_statistical = widgets.Dropdown(options=self.get_normal_node_options(), description='Parent Node (Statistical):')
         
-        self.operator_dropdown.observe(self.on_operator_change, names='value')
         self.parameter_widgets = widgets.VBox([])
+        self.operator_dropdown.observe(self.on_operator_change, names='value')
         
+        self.stat_parameter_widgets = widgets.VBox([])  # Container for statistical node parameters
+        self.stat_operator_dropdown.observe(self.on_stat_operator_change, names='value')
                 
         # Initialize parameter widgets for the default (first) operator
         if self.operators:
@@ -52,7 +54,27 @@ class MainView:
     def on_operator_change(self, change):
         operator_name = change['new']
         operator = self.operators[operator_name]
-        self.parameter_widgets.children = [self.create_widget_for_parameter(p) for p in operator['parameters']]
+        if operator['parameters']:
+            param_widgets = [self.create_widget_for_parameter(p) for p in operator['parameters']]
+            self.parameter_widgets = widgets.VBox(param_widgets)
+        else:
+            self.parameter_widgets = widgets.VBox([])
+
+        # Update the node form to include the new parameter_widgets
+        self.node_form.children = [self.operator_dropdown, self.parent_node_dropdown_normal, self.parameter_widgets, self.add_node_button]
+
+        
+    def on_stat_operator_change(self, change):
+        stat_operator_name = change['new']
+        stat_operator = self.operators[stat_operator_name]
+        if stat_operator['parameters']:
+            param_widgets = [self.create_widget_for_parameter(p) for p in stat_operator['parameters']]
+            self.stat_parameter_widgets = widgets.VBox(param_widgets)
+        else:
+            self.stat_parameter_widgets = widgets.VBox([])
+
+        # Rebuild the stat node form with the new stat_parameter_widgets
+        self.stat_node_form.children = [self.stat_operator_dropdown, self.parent_node_dropdown_statistical, self.stat_parameter_widgets, self.add_stat_node_button]
         
     def create_widget_for_parameter(self, param):
         if param['type'] == 'float':
@@ -82,14 +104,14 @@ class MainView:
         
     def add_statistical_node(self, b):
         selected_stat_operator_json = json.dumps(self.operators[self.stat_operator_dropdown.value])
-        new_stat_node = PipelineNode(selected_stat_operator_json)
+        stat_parameters = {widget.description: widget.value for widget in self.stat_parameter_widgets.children}
+        new_stat_node = PipelineNode(selected_stat_operator_json, params=stat_parameters)
 
         parent_node_id = self.parent_node_dropdown_statistical.value
         if parent_node_id and parent_node_id != 'Root':
             parent_node = self.find_node_by_id(parent_node_id)
             assert parent_node is not None, "Parent node not found."
             parent_node.add_node(new_stat_node)
-            print(f"Added statistical node to parent: {parent_node_id}")  # Debugging
         
         self.update_graph_view()
         self.update_dropdowns()

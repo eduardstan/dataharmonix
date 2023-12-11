@@ -41,4 +41,29 @@ def create_dummy_statistical_operator(name, description, input_type="number", ou
         "parameters": [],
         "dependencies": []
     }
+    
+def not_so_simple_mean_function(data, constant=1.0):
+    return np.mean(data * constant)
+
+def create_dummy_statistical_operator_with_params(name, description, input_type="number", output_type="number"):
+    """Generates a dummy configuration for a statistical operator."""
+    return {
+        "name": name,
+        "description": description,
+        "operator_type": "function",
+        "callable": "dataharmonix.utils.dummy_operators.not_so_simple_mean_function",
+        "is_statistical": True,
+        "input_type": input_type,
+        "output_type": output_type,
+        "parameters": [
+            {
+                "name": "constant",
+                "type": "float",
+                "description": "Constant to multiply",
+                "default": 1.0,
+                "required": False
+            }
+        ],
+        "dependencies": []
+    }
 
