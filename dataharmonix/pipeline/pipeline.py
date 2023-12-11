@@ -146,6 +146,7 @@ class DataPipeline:
         }
         node_classes = 'statistical' if current_node.is_statistical else 'normal'
         nodes.append(ipycytoscape.Node(data=node_data, classes=node_classes))
+        # nodes.append(current_node)
 
         # Recursively traverse child nodes
         for child in current_node.children:
@@ -159,12 +160,16 @@ class DataPipeline:
             edges.append(ipycytoscape.Edge(data=edge_data, classes='statistical-edge'))
             self.collect_nodes_and_edges(stat_child, nodes, edges, processed_nodes)
 
-
-
     def get_nodes(self):
         nodes = []
         if self.root_node:
             self.collect_nodes_and_edges(self.root_node, nodes, [])
+        return nodes
+    
+    def get_nodes_with_id(self):
+        nodes = []
+        if self.root_node:
+            self.collect_pipeline_nodes(self.root_node, nodes)
         return nodes
 
     def get_edges(self):
@@ -172,3 +177,19 @@ class DataPipeline:
         if self.root_node:
             self.collect_nodes_and_edges(self.root_node, [], edges)
         return edges
+    
+    def collect_pipeline_nodes(self, current_node, nodes, processed_nodes=None):
+        if processed_nodes is None:
+            processed_nodes = set()
+
+        if current_node.id in processed_nodes:
+            return
+
+        processed_nodes.add(current_node.id)
+        nodes.append(current_node)
+
+        for child in current_node.children:
+            self.collect_pipeline_nodes(child, nodes, processed_nodes)
+
+        for stat_child in current_node.statistical_children:
+            self.collect_pipeline_nodes(stat_child, nodes, processed_nodes)
