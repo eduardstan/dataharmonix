@@ -42,6 +42,11 @@ class MainView:
         self.node_form = widgets.VBox([self.operator_dropdown, self.parent_node_dropdown_normal, self.parameter_widgets, self.add_node_button])
         self.stat_node_form = widgets.VBox([self.stat_operator_dropdown, self.parent_node_dropdown_statistical, self.add_stat_node_button])
         
+        # Delete node
+        self.delete_node_button = widgets.Button(description='Delete Node')
+        self.delete_node_button.on_click(self.delete_node)
+        self.selected_node_id = None
+        
         self.graph_widget = ipycytoscape.CytoscapeWidget()
         self.update_graph_view()
         # Attach event listener to nodes
@@ -115,6 +120,16 @@ class MainView:
         
         self.update_graph_view()
         self.update_dropdowns()
+        
+    def delete_node(self, b):
+        if self.selected_node_id:
+            self.data_pipeline.remove_node(self.selected_node_id)
+            self.update_graph_view()
+            self.update_dropdowns()
+            with self.output_widget:
+                self.output_widget.clear_output()
+                print(f"Node {self.selected_node_id} deleted.")
+            self.selected_node_id = None
 
     def update_graph_view(self):
         pipeline_state = self.data_pipeline.get_current_state()
@@ -134,6 +149,8 @@ class MainView:
     def on_node_click(self, event):
         # Extract node ID from the event
         node_id = event['data']['id']
+        # For deletion
+        self.selected_node_id = node_id
         # Find the corresponding node in the data pipeline
         node = self.find_node_by_id(node_id)
         if node:
@@ -202,5 +219,5 @@ class MainView:
 
     def render(self):
         # Layout the graph and UI components
-        ui_components = widgets.VBox([self.node_form, self.stat_node_form])
+        ui_components = widgets.VBox([self.node_form, self.stat_node_form, self.delete_node_button])
         return widgets.VBox([self.graph_widget, ui_components, self.output_widget])

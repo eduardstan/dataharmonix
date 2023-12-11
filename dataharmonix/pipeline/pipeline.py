@@ -22,19 +22,26 @@ class PipelineNode:
            
     # Remove a node
     def remove_node(self, node_id):
-        # Remove a specific child node based on its 'is_statistical' property
-        if any(child.id == node_id and child.is_statistical for child in self.statistical_children):
-            # Remove a specific statistical child
-            self.statistical_children = [
-                child for child in self.statistical_children if child.id != node_id
-            ]
-        elif any(child.id == node_id for child in self.children):
-            # Remove a normal child and its statistical children
-            self.children = [child for child in self.children if child.id != node_id]
-            # Additionally, clear all statistical children of the removed normal child
-            for child in self.children:
-                if child.id == node_id:
-                    child.statistical_children = []
+        assert self.root_node is not None, "The pipeline is empty."
+
+        def recursive_remove(current_node, target_id):
+            for child in current_node.children + current_node.statistical_children:
+                if child.id == target_id:
+                    if child.is_statistical:
+                        current_node.statistical_children.remove(child)
+                    else:
+                        current_node.children.remove(child)
+                    return True
+                if recursive_remove(child, target_id):
+                    return True
+            return False
+
+        if self.root_node.id == node_id:
+            self.root_node = None
+        else:
+            removed = recursive_remove(self.root_node, node_id)
+            assert removed, f"Node with ID {node_id} not found in the pipeline."
+
 
     def execute(self, input_data):
         operator = Operator(config_json=json.dumps(self.operator_config))
@@ -92,18 +99,19 @@ class DataPipeline:
     def remove_node(self, node_id):
         assert self.root_node is not None, "The pipeline is empty."
 
-        # Helper function to recursively remove node and its statistical children
         def recursive_remove(current_node, target_id):
+            # Check and remove from statistical children first
+            for stat_child in current_node.statistical_children:
+                if stat_child.id == target_id:
+                    current_node.statistical_children.remove(stat_child)
+                    return True
+
+            # Then check normal children
             for child in current_node.children:
                 if child.id == target_id:
-                    # Assert that the node has statistical children if it's not a statistical node itself
-                    assert not child.is_statistical, "Attempting to remove a statistical node as a normal node."
-                    # Remove all statistical children of the target node
-                    child.statistical_children.clear()
-                    # Remove the target node from children
                     current_node.children.remove(child)
                     return True
-                # Recur for child nodes
+                # Recursively remove from child's children
                 if recursive_remove(child, target_id):
                     return True
             return False
