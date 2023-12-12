@@ -10,6 +10,14 @@ class MainView:
         self.data_pipeline = data_pipeline
         self.operators = operators
         
+        # Layout selector dropdown
+        self.layout_selector = widgets.Dropdown(
+            options=['Cose', 'Breadthfirst', 'Circle', 'Grid', 'Random'],
+            value='Cose',
+            description='Layout:'
+        )
+        self.layout_selector.observe(self.on_layout_change, names='value')
+        
         # Filter out statistical operators
         normal_operators = {name: op for name, op in operators.items() if not op['is_statistical']}
         self.operator_dropdown = widgets.Dropdown(options=[op['name'] for op in normal_operators.values()], description='Operator:')
@@ -56,6 +64,18 @@ class MainView:
 
         self.output_widget = widgets.Output()
         
+    def on_layout_change(self, change):
+        if change['new'] == 'Breadthfirst':
+            self.graph_widget.set_layout(name='breadthfirst')
+        elif change['new'] == 'Circle':
+            self.graph_widget.set_layout(name='circle') 
+        elif change['new'] == 'Grid':
+            self.graph_widget.set_layout(name='grid') 
+        elif change['new'] == 'Random':
+            self.graph_widget.set_layout(name='random') 
+        else:
+            self.graph_widget.set_layout(name='cose') 
+
     def on_operator_change(self, change):
         operator_name = change['new']
         operator = self.operators[operator_name]
@@ -124,12 +144,15 @@ class MainView:
     def delete_node(self, b):
         if self.selected_node_id:
             self.data_pipeline.remove_node(self.selected_node_id)
-            self.update_graph_view()
-            self.update_dropdowns()
             with self.output_widget:
                 self.output_widget.clear_output()
                 print(f"Node {self.selected_node_id} deleted.")
             self.selected_node_id = None
+            # Hide the delete button
+            self.delete_node_button.layout.visibility = 'hidden'
+            
+            self.update_graph_view()
+            self.update_dropdowns()
 
     def update_graph_view(self):
         pipeline_state = self.data_pipeline.get_current_state()
@@ -153,6 +176,8 @@ class MainView:
         self.selected_node_id = node_id
         # Find the corresponding node in the data pipeline
         node = self.find_node_by_id(node_id)
+        # Show the delete button
+        self.delete_node_button.layout.visibility = 'visible'
         if node:
             # Extract parameters of the node
             params = node.params
@@ -219,5 +244,6 @@ class MainView:
 
     def render(self):
         # Layout the graph and UI components
-        ui_components = widgets.VBox([self.node_form, self.stat_node_form, self.delete_node_button])
+        self.delete_node_button.layout.visibility = 'hidden'  # Hide delete button initially
+        ui_components = widgets.VBox([self.layout_selector, self.node_form, self.stat_node_form, self.delete_node_button])
         return widgets.VBox([self.graph_widget, ui_components, self.output_widget])
