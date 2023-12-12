@@ -4,6 +4,7 @@ from IPython.display import display
 import ipycytoscape
 from dataharmonix.utils.graph_utils import create_cytoscape_node, create_cytoscape_edge
 from dataharmonix.pipeline.pipeline import PipelineNode
+from dataharmonix.ui.ipywidgets_ui.node_view import NodeView
 
 class MainView:
     def __init__(self, data_pipeline, operators):
@@ -50,17 +51,20 @@ class MainView:
         self.node_form = widgets.VBox([self.operator_dropdown, self.parent_node_dropdown_normal, self.parameter_widgets, self.add_node_button])
         self.stat_node_form = widgets.VBox([self.stat_operator_dropdown, self.parent_node_dropdown_statistical, self.add_stat_node_button])
         
-        # Delete node
-        self.delete_node_button = widgets.Button(description='Delete Node')
-        self.delete_node_button.on_click(self.delete_node)
-        self.selected_node_id = None
+        # # Delete node
+        # self.delete_node_button = widgets.Button(description='Delete Node')
+        # self.delete_node_button.on_click(self.delete_node)
+        # self.selected_node_id = None
         
         self.graph_widget = ipycytoscape.CytoscapeWidget()
         self.update_graph_view()
         # Attach event listener to nodes
         self.graph_widget.on('node', 'click', self.on_node_click)
 
-        # Similarly, create other UI components for modify and delete
+        # Node view 
+        self.current_node_view = None
+        # Initialize an empty container for NodeView
+        self.node_view_container = widgets.VBox()
 
         self.output_widget = widgets.Output()
         
@@ -141,15 +145,21 @@ class MainView:
         self.update_graph_view()
         self.update_dropdowns()
         
-    def delete_node(self, b):
+    def on_delete_node(self, b):
         if self.selected_node_id:
             self.data_pipeline.remove_node(self.selected_node_id)
             with self.output_widget:
                 self.output_widget.clear_output()
                 print(f"Node {self.selected_node_id} deleted.")
             self.selected_node_id = None
-            # Hide the delete button
-            self.delete_node_button.layout.visibility = 'hidden'
+            # # Hide the delete button
+            # self.delete_node_button.layout.visibility = 'hidden'
+            
+            # Clear the current NodeView
+            self.current_node_view = None
+            self.node_view_container.children = []
+            # Refresh the graph view
+            self.update_graph_view()
             
             self.update_graph_view()
             self.update_dropdowns()
@@ -176,15 +186,40 @@ class MainView:
         self.selected_node_id = node_id
         # Find the corresponding node in the data pipeline
         node = self.find_node_by_id(node_id)
-        # Show the delete button
-        self.delete_node_button.layout.visibility = 'visible'
-        if node:
-            # Extract parameters of the node
-            params = node.params
-            # Update the output widget with the node's parameters
-            with self.output_widget:
-                self.output_widget.clear_output()
-                display(f"Parameters for node {node.operator_config['name']} ({node_id}): {params}")
+        
+        if node and (not self.current_node_view or self.current_node_view.node.id != node_id):
+            
+            # # Extract parameters of the node
+            # params = node.params
+            # # Update the output widget with the node's parameters
+            # with self.output_widget:
+            #     self.output_widget.clear_output()
+            #     display(f"Parameters for node {node.operator_config['name']} ({node_id}): {params}")
+                
+            self.current_node_view = NodeView(node, on_update_callback=self.on_update_node, on_delete_callback=self.on_delete_node)
+            
+            rendered_view = self.current_node_view.render()
+            if rendered_view is not None:
+                self.node_view_container.children = [rendered_view]
+            
+    def on_update_node(self):
+        # Refresh the graph view to reflect parameter changes
+        self.update_graph_view()
+        
+        
+        # # Show the delete button
+        # self.delete_node_button.layout.visibility = 'visible'
+        # if node:
+        #     # Extract parameters of the node
+        #     params = node.params
+        #     # Update the output widget with the node's parameters
+        #     with self.output_widget:
+        #         self.output_widget.clear_output()
+        #         display(f"Parameters for node {node.operator_config['name']} ({node_id}): {params}")
+                
+        #     node_view = NodeView(node, on_delete_callback=self.delete_node)
+        #     # Display the node view in a separate area or as a pop-up
+        #     display(node_view.render())
 
     def find_node_by_id(self, node_id, current_node=None):
         if current_node is None:
@@ -244,6 +279,12 @@ class MainView:
 
     def render(self):
         # Layout the graph and UI components
-        self.delete_node_button.layout.visibility = 'hidden'  # Hide delete button initially
-        ui_components = widgets.VBox([self.layout_selector, self.node_form, self.stat_node_form, self.delete_node_button])
+        # self.delete_node_button.layout.visibility = 'hidden'  # Hide delete button initially
+        ui_components = widgets.VBox([
+            self.layout_selector, 
+            self.node_form, 
+            self.stat_node_form, 
+            # self.delete_node_button, 
+            self.node_view_container
+        ])
         return widgets.VBox([self.graph_widget, ui_components, self.output_widget])

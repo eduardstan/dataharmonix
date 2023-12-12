@@ -1,36 +1,56 @@
 import ipywidgets as widgets
+from IPython.display import display
 
 class NodeView:
-    def __init__(self, node):
+    def __init__(self, node, on_update_callback=None, on_delete_callback=None):
         self.node = node
+        self.on_update_callback = on_update_callback
+        self.on_delete_callback = on_delete_callback
         self.view = self.create_view()
 
     def create_view(self):
-        # Access properties of PipelineNode object
+        # Node info
         name_label = widgets.Label(value=f"Node: {self.node.operator_config['name']} ({self.node.id})")
-        parameters_view = self.create_parameters_view(self.node.operator_config['parameters'])
 
-        if self.node.is_statistical:
-            return widgets.VBox([name_label, parameters_view], layout=widgets.Layout(border='1px solid blue'))
-        else:
-            return widgets.VBox([name_label, parameters_view], layout=widgets.Layout(border='1px solid black'))
+        # Parameter editing widgets
+        parameter_widgets = [self.create_widget_for_parameter(param) for param in self.node.operator_config['parameters']]
+        parameters_box = widgets.VBox(parameter_widgets)
 
+        # Update and delete buttons
+        buttons = []
+        if self.node.operator_config['parameters']:  # Check if there are parameters
+            update_button = widgets.Button(description='Update')
+            update_button.on_click(self.on_update)
+            buttons.append(update_button)
 
-    def create_parameters_view(self, parameters):
-        # Create widgets for node parameters
-        param_widgets = []
-        for param in parameters:
-            label = widgets.Label(value=param['name'])
-            input_widget = self.create_input_widget(param)
-            param_widgets.append(widgets.HBox([label, input_widget]))
-        return widgets.VBox(param_widgets)
+        delete_button = widgets.Button(description='Delete')
+        delete_button.on_click(self.on_delete)
+        buttons.append(delete_button)
 
-    def create_input_widget(self, param):
-        # Create appropriate widget based on parameter type
+        # Assembling the view with conditional buttons
+        return widgets.VBox([name_label, parameters_box] + buttons)
+
+    def create_widget_for_parameter(self, param):
+        # Fetch the current value of the parameter or fallback to the default
+        current_value = self.node.params.get(param['name'], param.get('default', 0))
         if param['type'] == 'float':
-            return widgets.FloatText(value=param.get('default', 0.0))
-        # Add more cases for different parameter types
-        return widgets.Text()  # Fallback widget
+            return widgets.FloatText(value=current_value, description=param['name'])
+        elif param['type'] == 'int':
+            return widgets.IntText(value=current_value, description=param['name'])
+        else:
+            return widgets.Text(value=current_value, description=param['name'])
+
+    def on_update(self, b):
+        # Collect updated parameter values
+        new_params = {widget.description: widget.value for widget in self.view.children[1].children}
+        # Update node with new parameters
+        self.node.params = new_params
+        if self.on_update_callback:
+            self.on_update_callback()
+
+    def on_delete(self, b):
+        if self.on_delete_callback:
+            self.on_delete_callback(self.node.id)
 
     def render(self):
         return self.view
