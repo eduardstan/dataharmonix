@@ -9,11 +9,37 @@ def create_cytoscape_graph(pipeline_state):
     # Define custom styles for nodes and edges
     graph.set_style([
         # Node styles
-        {'selector': '.statistical', 'style': {'shape': 'triangle', 'background-color': 'red'}},
-        {'selector': '.non-statistical', 'style': {'shape': 'ellipse', 'background-color': 'blue'}},
+        {
+            'selector': '.statistical', 
+            'style': {
+                'shape': 'triangle', 
+                'background-color': 'red'
+            }
+        },
+        {
+            'selector': '.non-statistical', 
+            'style': {
+                'shape': 'ellipse', 
+                'background-color': 'blue'
+            }
+        },
         # Edge styles
-        {'selector': '.operator-edge', 'style': {'line-color': 'green', 'curve-style': 'bezier', 'target-arrow-shape': 'triangle'}},
-        {'selector': '.statistical-edge', 'style': {'line-color': 'orange', 'curve-style': 'unbundled-bezier', 'target-arrow-shape': 'none'}}
+        {
+            'selector': '.operator-edge', 
+            'style': {
+                'line-color': 'green', 
+                'curve-style': 'bezier', 
+                'target-arrow-shape': 'triangle'
+            }
+        },
+        {
+            'selector': '.statistical-edge', 
+            'style': {
+                'line-color': 'orange', 
+                'curve-style': 'unbundled-bezier', 
+                'target-arrow-shape': 'none'
+            }
+        }
     ])
 
     return graph

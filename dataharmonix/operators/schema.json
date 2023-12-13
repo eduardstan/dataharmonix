@@ -14,7 +14,7 @@
     "operator_type": {
       "type": "string",
       "enum": ["class", "function"],
-      "description": "Type of the operator, either a class or a function."
+      "description": "The type of the operator: class or function."
     },
     "callable": {
       "type": "string",
@@ -27,10 +27,11 @@
       },
       "description": "List of methods to call on the class, applicable only if operator_type is 'class'."
     },
-    "is_statistical": {
-      "type": "boolean",
-      "description": "Whether the operator is statistical or not."
-    },
+    "operator_category": {
+      "type": "string",
+      "enum": ["normal", "statistical", "loader"],
+      "description": "The category of the operator: normal, statistical, or loader."
+    },    
     "input_type": {
       "type": "string",
       "description": "The type of data this operator accepts."
@@ -121,5 +122,5 @@
       }
     }
   },
-  "required": ["name", "operator_type", "callable", "is_statistical", "input_type", "output_type", "parameters"]
+  "required": ["name", "operator_type", "callable", "operator_category", "input_type", "output_type", "parameters"]
 }

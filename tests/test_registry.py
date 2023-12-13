@@ -11,6 +11,7 @@ class TestRegistry(unittest.TestCase):
           "operator_type": "class",
           "callable": "sktime.transformers.series_as_features.PiecewiseAggregateApproximation",
           "methods": ["fit", "transform"],
+          "operator_category": "normal",
           "input_type": "Timeseries",
           "output_type": "Timeseries",
           "parameters": [

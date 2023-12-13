@@ -13,9 +13,12 @@ class Operator:
         with open(schema_path, 'r') as schema_file:
             schema = json.load(schema_file)
         try:
+            # print("Validating config:", self.config)
             validate(instance=self.config, schema=schema)
         except ValidationError as e:
+            # print("Validation error caught:", e)
             raise ValueError(f"Invalid operator configuration: {e}")
+        # print("Config validation passed.")
 
     def validate_parameters(self, params):
         for param in self.config['parameters']:

@@ -21,11 +21,11 @@ class MainView:
         self.layout_selector.observe(self.on_layout_change, names='value')
         
         # Filter out statistical operators
-        normal_operators = {name: op for name, op in operators.items() if not op['is_statistical']}
+        normal_operators = {name: op for name, op in operators.items() if not op['operator_category'] == 'statistical'}
         self.operator_dropdown = widgets.Dropdown(options=[op['name'] for op in normal_operators.values()], description='Operator:')
         
         # Filter out non-statistical operators
-        statistical_operators = {name: op for name, op in operators.items() if op['is_statistical']}
+        statistical_operators = {name: op for name, op in operators.items() if op['operator_category'] == 'statistical'}
         self.stat_operator_dropdown = widgets.Dropdown(options=[op['name'] for op in statistical_operators.values()], description='Statistical Operator:')
         
         # Dropdowns for normal and statistical nodes
@@ -175,10 +175,14 @@ class MainView:
         # Fetch the current nodes from the pipeline
         current_nodes = self.data_pipeline.get_nodes_with_id()
         # Filter out statistical nodes and create options
-        return [('Root', None)] + [(node.id, node.id) for node in current_nodes if not node.is_statistical]
+        return [('Root', None)] + [(node, node.id) for node in current_nodes if not node.operator_category == "statistical"]
 
 
     def on_node_click(self, event):
+        # Clear the output            
+        with self.output_widget:
+            self.output_widget.clear_output()
+        
         # Extract node ID from the event
         node_id = event['data']['id']
         # For deletion

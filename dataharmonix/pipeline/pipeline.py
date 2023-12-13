@@ -10,12 +10,12 @@ class PipelineNode:
         self.params = params or {}
         self.children = children or []  # Main pipeline nodes
         self.statistical_children = statistical_children or []  # Statistical analysis nodes
-        self.is_statistical = self.operator_config.get('is_statistical', False)
+        self.operator_category = self.operator_config["operator_category"]
 
     # Add a node
     # TODO: check if the input node already exists in the pipeline
     def add_node(self, node):
-        if node.is_statistical:
+        if node.operator_category == 'statistical':
             self.statistical_children.append(node)
         else:
             self.children.append(node)
@@ -27,7 +27,7 @@ class PipelineNode:
         def recursive_remove(current_node, target_id):
             for child in current_node.children + current_node.statistical_children:
                 if child.id == target_id:
-                    if child.is_statistical:
+                    if child.operator_category == 'statistical':
                         current_node.statistical_children.remove(child)
                     else:
                         current_node.children.remove(child)
@@ -52,7 +52,7 @@ class PipelineNode:
             stat_child.execute(node_output)  # Execute but do not use its output for main flow
 
         # Store the output to pass to the main children
-        final_output = node_output if not self.is_statistical else input_data
+        final_output = node_output if not self.operator_category == 'statistical' else input_data
         
         # If there are main children, process them and return their output
         if self.children:
@@ -80,7 +80,7 @@ class DataPipeline:
         def recursive_add(current_node, target_id, node_to_add):
             if current_node.id == target_id:
                 # If the new node is statistical, ensure the parent is not statistical
-                assert not (node_to_add.is_statistical and current_node.is_statistical), \
+                assert not (node_to_add.operator_category == 'statistical' and current_node.operator_category == 'statistical'), \
                     "Statistical nodes cannot be children of other statistical nodes."
                 # Check if node already exists
                 for child in current_node.children:
@@ -103,30 +103,24 @@ class DataPipeline:
     def remove_node(self, node_id):
         assert self.root_node is not None, "The pipeline is empty."
 
-        # print("Before deletion:", self.get_current_state())
-        
         def recursive_remove(current_node, target_id):
-            # Check and remove from statistical children first
-            for stat_child in current_node.statistical_children:
-                if stat_child.id == target_id:
-                    current_node.statistical_children.remove(stat_child)
-                    return True
-
-            # Then check normal children
-            for child in current_node.children:
-                if child.id == target_id:
-                    current_node.children.remove(child)
-                    return True
-                # Recursively remove from child's children
-                if recursive_remove(child, target_id):
-                    return True
+            # Check children and statistical children
+            for child_list in [current_node.children, current_node.statistical_children]:
+                for child in child_list:
+                    if child.id == target_id:
+                        # Recursively remove all children of the target node
+                        for subchild in child.children + child.statistical_children:
+                            recursive_remove(child, subchild.id)
+                        # Remove the target node
+                        child_list.remove(child)
+                        return True
+                    elif recursive_remove(child, target_id):
+                        return True
             return False
 
         if self.root_node.id == node_id:
-            # If the root itself is to be removed, reset the root
             self.root_node = None
         else:
-            # Start recursive removal process
             removed = recursive_remove(self.root_node, node_id)
             assert removed, f"Node with ID {node_id} not found in the pipeline."
         
@@ -160,8 +154,8 @@ class DataPipeline:
             'id': current_node.id,
             'label': current_node.operator_config.get('name', 'Unknown')
         }
-        node_classes = 'statistical' if current_node.is_statistical else 'normal'
-        nodes.append(ipycytoscape.Node(data=node_data, classes=node_classes))
+        # node_classes = 'statistical' if current_node.is_statistical else 'normal'
+        nodes.append(ipycytoscape.Node(data=node_data, classes=current_node.operator_category))
         # nodes.append(current_node)
 
         # Recursively traverse child nodes

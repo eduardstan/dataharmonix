@@ -10,7 +10,7 @@ def create_dummy_normal_operator(name, description, input_type="number", output_
         "description": description,
         "operator_type": "function",
         "callable": "dataharmonix.utils.dummy_operators.simple_add_function",
-        "is_statistical": False,
+        "operator_category": "normal",
         "input_type": input_type,
         "output_type": output_type,
         "parameters": [
@@ -35,7 +35,7 @@ def create_dummy_statistical_operator(name, description, input_type="number", ou
         "description": description,
         "operator_type": "function",
         "callable": "dataharmonix.utils.dummy_operators.simple_mean_function",
-        "is_statistical": True,
+        "operator_category": "statistical",
         "input_type": input_type,
         "output_type": output_type,
         "parameters": [],
@@ -52,7 +52,7 @@ def create_dummy_statistical_operator_with_params(name, description, input_type=
         "description": description,
         "operator_type": "function",
         "callable": "dataharmonix.utils.dummy_operators.not_so_simple_mean_function",
-        "is_statistical": True,
+        "operator_category": "statistical",
         "input_type": input_type,
         "output_type": output_type,
         "parameters": [
