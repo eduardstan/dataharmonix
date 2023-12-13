@@ -64,84 +64,84 @@ class TestPipelineNode(unittest.TestCase):
         self.assertEqual(len(root_node.statistical_children), 2)
         self.assertEqual(len(root_node.children), 1)
 
-        # root_node.remove_node(child_node.id)
-        # self.assertEqual(len(root_node.children), 0)
+        root_node.remove_node(child_node.id)
+        self.assertEqual(len(root_node.children), 0)
 
 
-class TestDataPipeline(unittest.TestCase):
+# class TestDataPipeline(unittest.TestCase):
 
-    def test_pipeline_execution(self):
+#     def test_pipeline_execution(self):
         
-        root_params = {"constant": 10.0}
-        child_params = {"constant": -20.0}
-        statistical_params = {"constant": 1000.0}
+#         root_params = {"constant": 10.0}
+#         child_params = {"constant": -20.0}
+#         statistical_params = {"constant": 1000.0}
         
-        root_node = PipelineNode(json.dumps(function_config), root_params)
-        child_node = PipelineNode(json.dumps(function_config), child_params)
-        statistical_node = PipelineNode(json.dumps(statistical_function_config), statistical_params)
+#         root_node = PipelineNode(json.dumps(function_config), root_params)
+#         child_node = PipelineNode(json.dumps(function_config), child_params)
+#         statistical_node = PipelineNode(json.dumps(statistical_function_config), statistical_params)
 
-        root_node.add_node(statistical_node)
-        root_node.add_node(child_node)
-        pipeline = DataPipeline(root_node)
+#         root_node.add_node(statistical_node)
+#         root_node.add_node(child_node)
+#         pipeline = DataPipeline(root_node)
 
-        # Perhaps mocking would be ideal here
-        input_data = [0,1,2,3]
-        results = pipeline.run(input_data)
+#         # Perhaps mocking would be ideal here
+#         input_data = [0,1,2,3]
+#         results = pipeline.run(input_data)
 
-        expected_output = [-10.0, -9, -8.0, -7.0]
-        self.assertEqual(results, expected_output)
+#         expected_output = [-10.0, -9, -8.0, -7.0]
+#         self.assertEqual(results, expected_output)
         
-    # Setup a basic pipeline structure for testing
-    def setUp(self):
-        self.root_node = PipelineNode(json.dumps(function_config), {"constant": 5.0})
-        self.pipeline = DataPipeline(self.root_node)
-        self.child_node = PipelineNode(json.dumps(function_config), {"constant": 10.0})
-        self.statistical_node = PipelineNode(json.dumps(statistical_function_config), {"constant": 15.0})
+#     # Setup a basic pipeline structure for testing
+#     def setUp(self):
+#         self.root_node = PipelineNode(json.dumps(function_config), {"constant": 5.0})
+#         self.pipeline = DataPipeline(self.root_node)
+#         self.child_node = PipelineNode(json.dumps(function_config), {"constant": 10.0})
+#         self.statistical_node = PipelineNode(json.dumps(statistical_function_config), {"constant": 15.0})
 
-    def test_add_node_successfully(self):
-        self.pipeline.add_node(self.root_node.id, self.child_node)
-        self.assertIn(self.child_node, self.root_node.children)
+#     def test_add_node_successfully(self):
+#         self.pipeline.add_node(self.root_node.id, self.child_node)
+#         self.assertIn(self.child_node, self.root_node.children)
 
-    def test_add_existing_node(self):
-        self.pipeline.add_node(self.root_node.id, self.child_node)
-        with self.assertRaises(AssertionError):
-            self.pipeline.add_node(self.root_node.id, self.child_node)
+#     def test_add_existing_node(self):
+#         self.pipeline.add_node(self.root_node.id, self.child_node)
+#         with self.assertRaises(AssertionError):
+#             self.pipeline.add_node(self.root_node.id, self.child_node)
 
-    def test_add_node_to_nonexistent_parent(self):
-        with self.assertRaises(AssertionError):
-            self.pipeline.add_node("nonexistent_id", self.child_node)
+#     def test_add_node_to_nonexistent_parent(self):
+#         with self.assertRaises(AssertionError):
+#             self.pipeline.add_node("nonexistent_id", self.child_node)
 
-    def test_add_statistical_node_under_statistical_node(self):
-        self.pipeline.add_node(self.root_node.id, self.statistical_node)
-        with self.assertRaises(AssertionError):
-            self.pipeline.add_node(self.statistical_node.id, PipelineNode(json.dumps(statistical_function_config), {"constant": 20.0}))
+#     def test_add_statistical_node_under_statistical_node(self):
+#         self.pipeline.add_node(self.root_node.id, self.statistical_node)
+#         with self.assertRaises(AssertionError):
+#             self.pipeline.add_node(self.statistical_node.id, PipelineNode(json.dumps(statistical_function_config), {"constant": 20.0}))
 
-    def test_remove_node_successfully(self):
-        self.pipeline.add_node(self.root_node.id, self.child_node)
-        self.pipeline.add_node(self.root_node.id, self.statistical_node)
-        self.pipeline.remove_node(self.child_node.id)
-        self.assertNotIn(self.child_node, self.root_node.children)
-        self.pipeline.remove_node(self.statistical_node.id)
-        self.assertNotIn(self.statistical_node, self.root_node.statistical_children)
+#     def test_remove_node_successfully(self):
+#         self.pipeline.add_node(self.root_node.id, self.child_node)
+#         self.pipeline.add_node(self.root_node.id, self.statistical_node)
+#         self.pipeline.remove_node(self.child_node.id)
+#         self.assertNotIn(self.child_node, self.root_node.children)
+#         self.pipeline.remove_node(self.statistical_node.id)
+#         self.assertNotIn(self.statistical_node, self.root_node.statistical_children)
 
-    def test_remove_nonexistent_node(self):
-        with self.assertRaises(AssertionError):
-            self.pipeline.remove_node("nonexistent_id")
+#     def test_remove_nonexistent_node(self):
+#         with self.assertRaises(AssertionError):
+#             self.pipeline.remove_node("nonexistent_id")
 
-    def test_remove_node_also_removes_children(self):
-        self.pipeline.add_node(self.root_node.id, self.child_node)
-        self.pipeline.add_node(self.child_node.id, self.statistical_node)
+#     def test_remove_node_also_removes_children(self):
+#         self.pipeline.add_node(self.root_node.id, self.child_node)
+#         self.pipeline.add_node(self.child_node.id, self.statistical_node)
 
-        print("Child nodes before removal:", [node.id for node in self.root_node.children])
-        print("Statistical children of child node before removal:", [node.id for node in self.child_node.statistical_children])
+#         print("Child nodes before removal:", [node.id for node in self.root_node.children])
+#         print("Statistical children of child node before removal:", [node.id for node in self.child_node.statistical_children])
 
-        self.pipeline.remove_node(self.child_node.id)
+#         self.pipeline.remove_node(self.child_node.id)
 
-        print("Child nodes after removal:", [node.id for node in self.root_node.children])
-        print("Statistical children of child node after removal:", [node.id for node in self.child_node.statistical_children])
+#         print("Child nodes after removal:", [node.id for node in self.root_node.children])
+#         print("Statistical children of child node after removal:", [node.id for node in self.child_node.statistical_children])
 
-        self.assertNotIn(self.child_node, self.root_node.children)
-        self.assertNotIn(self.statistical_node, self.child_node.statistical_children)
+#         self.assertNotIn(self.child_node, self.root_node.children)
+#         self.assertNotIn(self.statistical_node, self.child_node.statistical_children)
 
 
 

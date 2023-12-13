@@ -22,30 +22,33 @@ class PipelineNode:
            
     # Remove a node
     def remove_node(self, node_id):
-        assert self.root_node is not None, "The pipeline is empty."
-
+        # Helper function for recursive removal
         def recursive_remove(current_node, target_id):
-            for child in current_node.children + current_node.statistical_children:
-                if child.id == target_id:
-                    if child.operator_category == 'statistical':
-                        current_node.statistical_children.remove(child)
-                    else:
-                        current_node.children.remove(child)
-                    return True
-                if recursive_remove(child, target_id):
-                    return True
+            for child_list in [current_node.children, current_node.statistical_children]:
+                for child in child_list:
+                    if child.id == target_id:
+                        child_list.remove(child)
+                        return True
+                    elif recursive_remove(child, target_id):
+                        return True
             return False
 
-        if self.root_node.id == node_id:
-            self.root_node = None
+        # Start recursive removal process
+        if self.id == node_id:
+            raise ValueError("Cannot remove root node from itself.")
         else:
-            removed = recursive_remove(self.root_node, node_id)
+            removed = recursive_remove(self, node_id)
             assert removed, f"Node with ID {node_id} not found in the pipeline."
+
 
 
     def execute(self, input_data):
         operator = Operator(config_json=json.dumps(self.operator_config))
-        node_output = operator.execute(input_data, self.params)
+        
+        if self.operator_category == 'loader':
+            node_output = operator.execute(self.params)
+        else:
+            node_output = operator.execute(input_data, self.params)
 
         # Execute statistical children without altering the node_output
         for stat_child in self.statistical_children:
