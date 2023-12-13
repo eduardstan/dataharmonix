@@ -52,10 +52,10 @@
             "description": "Name of the parameter."
           },
           "type": {
-            "type": "string",
-            "enum": ["boolean", "integer", "float", "string", "list of string"],
-            "description": "Data type of the parameter."
-          },
+              "type": "string",
+              "enum": ["boolean", "integer", "float", "string", "list of string", "input"],
+              "description": "Data type of the parameter."
+          },        
           "description": {
             "type": "string",
             "description": "Description of the parameter."
@@ -91,6 +91,11 @@
                   "possible_values": {"minItems": 1}
                 },
                 "required": ["possible_values", "default"]
+              },
+              {
+                  "properties": {
+                      "type": {"enum": ["input"]}
+                  }
               }
             ]
           }

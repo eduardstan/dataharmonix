@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def simple_add_function(data, constant=10.0):
     return [x + constant for x in data]
@@ -62,6 +63,36 @@ def create_dummy_statistical_operator_with_params(name, description, input_type=
                 "description": "Constant to multiply",
                 "default": 1.0,
                 "required": False
+            }
+        ],
+        "dependencies": []
+    }
+    
+def simple_load(filepath):
+    # Assuming the file is a CSV for this example
+    try:
+        df = pd.read_csv(filepath)
+        return df
+    except Exception as e:
+        raise ValueError(f"Failed to load file: {e}")
+
+def create_dummy_loader_operator(name, description, input_type="", output_type="table"):
+    """Generates a dummy configuration for a loader operator."""
+    return {
+        "name": name,
+        "description": description,
+        "operator_type": "function",
+        "callable": "dataharmonix.utils.dummy_operators.simple_load",
+        "operator_category": "loader",  # Changed to "loader"
+        "input_type": input_type,
+        "output_type": output_type,
+        "parameters": [
+            {
+                "name": "filepath",
+                "type": "input",
+                "description": "Path to the file to load",
+                "default": None,
+                "required": True
             }
         ],
         "dependencies": []
