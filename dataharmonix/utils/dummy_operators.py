@@ -66,4 +66,5 @@ def create_dummy_statistical_operator_with_params(name, description, input_type=
         ],
         "dependencies": []
     }
+    
 

@@ -11,11 +11,12 @@ class MainView:
         self.data_pipeline = data_pipeline
         self.operators = operators
         
-        # Layout selector dropdown
-        self.layout_selector = widgets.Dropdown(
-            options=['Cose', 'Breadthfirst', 'Circle', 'Grid', 'Random'],
-            value='Cose',
-            description='Layout:'
+        # Use RadioButtons for layout selection
+        self.layout_selector = widgets.RadioButtons(
+            options=['cose', 'breadthfirst', 'circle', 'grid', 'random'],
+            value='cose',  # default value
+            description='Layout:',
+            disabled=False
         )
         self.layout_selector.observe(self.on_layout_change, names='value')
         
@@ -69,16 +70,9 @@ class MainView:
         self.output_widget = widgets.Output()
         
     def on_layout_change(self, change):
-        if change['new'] == 'Breadthfirst':
-            self.graph_widget.set_layout(name='breadthfirst')
-        elif change['new'] == 'Circle':
-            self.graph_widget.set_layout(name='circle') 
-        elif change['new'] == 'Grid':
-            self.graph_widget.set_layout(name='grid') 
-        elif change['new'] == 'Random':
-            self.graph_widget.set_layout(name='random') 
-        else:
-            self.graph_widget.set_layout(name='cose') 
+        # Update the graph layout based on the selected radio button
+        new_layout = change['new']
+        self.graph_widget.set_layout(name=new_layout)
 
     def on_operator_change(self, change):
         operator_name = change['new']
@@ -146,7 +140,11 @@ class MainView:
         self.update_dropdowns()
         
     def on_delete_node(self, b, delete_message):
-        if self.selected_node_id:            
+        if self.selected_node_id:
+            # Clear the output            
+            with self.output_widget:
+                self.output_widget.clear_output()
+            
             # Delete node logic and clear NodeView
             self.data_pipeline.remove_node(self.selected_node_id)
             self.current_node_view = None
@@ -204,6 +202,10 @@ class MainView:
                 self.node_view_container.children = [rendered_view]
             
     def on_update_node(self, update_message):
+        # Clear the output            
+        with self.output_widget:
+            self.output_widget.clear_output()
+        
         # Refresh the graph view and clear NodeView
         self.update_graph_view()
         self.current_node_view = None
@@ -213,21 +215,6 @@ class MainView:
         with self.output_widget:
             self.output_widget.clear_output()
             print(update_message)
-        
-        
-        # # Show the delete button
-        # self.delete_node_button.layout.visibility = 'visible'
-        # if node:
-        #     # Extract parameters of the node
-        #     params = node.params
-        #     # Update the output widget with the node's parameters
-        #     with self.output_widget:
-        #         self.output_widget.clear_output()
-        #         display(f"Parameters for node {node.operator_config['name']} ({node_id}): {params}")
-                
-        #     node_view = NodeView(node, on_delete_callback=self.delete_node)
-        #     # Display the node view in a separate area or as a pop-up
-        #     display(node_view.render())
 
     def find_node_by_id(self, node_id, current_node=None):
         if current_node is None:
