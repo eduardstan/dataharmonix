@@ -74,6 +74,8 @@ class DataPipeline:
         assert self.root_node is not None, "The pipeline is empty."
         assert new_node is not None, "The new node to add cannot be None."
 
+        # print("Before addition:", self.get_current_state())
+        
         # Helper function to recursively find and add node
         def recursive_add(current_node, target_id, node_to_add):
             if current_node.id == target_id:
@@ -95,10 +97,14 @@ class DataPipeline:
         # Start recursive addition process
         added = recursive_add(self.root_node, parent_node_id, new_node)
         assert added, f"Parent node with ID {parent_node_id} not found in the pipeline."
+        
+        # print("After addition:", self.get_current_state())
     
     def remove_node(self, node_id):
         assert self.root_node is not None, "The pipeline is empty."
 
+        # print("Before deletion:", self.get_current_state())
+        
         def recursive_remove(current_node, target_id):
             # Check and remove from statistical children first
             for stat_child in current_node.statistical_children:
@@ -123,6 +129,8 @@ class DataPipeline:
             # Start recursive removal process
             removed = recursive_remove(self.root_node, node_id)
             assert removed, f"Node with ID {node_id} not found in the pipeline."
+        
+        # print("After deletion:", self.get_current_state())
 
 
     def run(self, input_data):

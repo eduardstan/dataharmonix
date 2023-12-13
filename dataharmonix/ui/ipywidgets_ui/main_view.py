@@ -145,24 +145,19 @@ class MainView:
         self.update_graph_view()
         self.update_dropdowns()
         
-    def on_delete_node(self, b):
-        if self.selected_node_id:
+    def on_delete_node(self, b, delete_message):
+        if self.selected_node_id:            
+            # Delete node logic and clear NodeView
             self.data_pipeline.remove_node(self.selected_node_id)
-            with self.output_widget:
-                self.output_widget.clear_output()
-                print(f"Node {self.selected_node_id} deleted.")
-            self.selected_node_id = None
-            # # Hide the delete button
-            # self.delete_node_button.layout.visibility = 'hidden'
-            
-            # Clear the current NodeView
             self.current_node_view = None
             self.node_view_container.children = []
-            # Refresh the graph view
-            self.update_graph_view()
-            
             self.update_graph_view()
             self.update_dropdowns()
+            
+            # Display delete message in output widget
+            with self.output_widget:
+                self.output_widget.clear_output()
+                print(delete_message)
 
     def update_graph_view(self):
         pipeline_state = self.data_pipeline.get_current_state()
@@ -175,9 +170,15 @@ class MainView:
         normal_node_options = self.get_normal_node_options()
         self.parent_node_dropdown_normal.options = normal_node_options
         self.parent_node_dropdown_statistical.options = normal_node_options
+        
+        # print("Dropdown options updated:", normal_node_options)
 
     def get_normal_node_options(self):
-        return [('Root', None)] + [(node.id, node.id) for node in self.data_pipeline.get_nodes_with_id() if not node.is_statistical]
+        # Fetch the current nodes from the pipeline
+        current_nodes = self.data_pipeline.get_nodes_with_id()
+        # Filter out statistical nodes and create options
+        return [('Root', None)] + [(node.id, node.id) for node in current_nodes if not node.is_statistical]
+
 
     def on_node_click(self, event):
         # Extract node ID from the event
@@ -202,9 +203,16 @@ class MainView:
             if rendered_view is not None:
                 self.node_view_container.children = [rendered_view]
             
-    def on_update_node(self):
-        # Refresh the graph view to reflect parameter changes
+    def on_update_node(self, update_message):
+        # Refresh the graph view and clear NodeView
         self.update_graph_view()
+        self.current_node_view = None
+        self.node_view_container.children = []
+
+        # Display update message in output widget
+        with self.output_widget:
+            self.output_widget.clear_output()
+            print(update_message)
         
         
         # # Show the delete button

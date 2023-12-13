@@ -45,12 +45,14 @@ class NodeView:
         new_params = {widget.description: widget.value for widget in self.view.children[1].children}
         # Update node with new parameters
         self.node.params = new_params
+        # Call update callback with a message
         if self.on_update_callback:
-            self.on_update_callback()
+            self.on_update_callback(f"Node {self.node.id} updated.")
 
     def on_delete(self, b):
+        # Call delete callback with a message
         if self.on_delete_callback:
-            self.on_delete_callback(self.node.id)
+            self.on_delete_callback(self.node.id, f"Node {self.node.id} deleted.")
 
     def render(self):
         return self.view
